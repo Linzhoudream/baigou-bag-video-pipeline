@@ -1,0 +1,44 @@
+# =============================================================
+# 白沟箱包视频流水线 · 定时调度规格（cron）
+# 空间：腾讯文档「白沟箱包自媒体流水线」
+# 安装：crontab cron_schedule.txt
+# 说明：
+#   - 仅调度"文本产出"自动段；真实出图/出视频由人工在 seedance/即梦 执行。
+#   - 人工收口点（08:30 补数据 / 10:30 4.5 质量门 / Track B 裁决①②）
+#     不会被定时跳过，需人工确认后手动触发对应 phase。
+#   - 当前沙箱无 headless 执行器，本文件为调度规格落档；
+#     真正触发需平台侧"定时运行技能"能力，或把 dispatch.sh 接到编排智能体。
+# =============================================================
+
+# ---------- Track A 量产线（每日） ----------
+# 08:00  情报：热点简报 + 竞品动态  → ①情报库
+0 8 * * *  /workspace/skills/baigou-video-pipeline/dispatch.sh produce 1,2
+
+# （08:30 人工收口：运营把付费数据截图塞进①「补充数据」，再放行 task3）
+
+# 09:30  选题推荐  → ②选题库
+30 9 * * * /workspace/skills/baigou-video-pipeline/dispatch.sh produce 3
+
+# 10:00  批量脚本  → ③文案脚本库
+0 10 * * * /workspace/skills/baigou-video-pipeline/dispatch.sh produce 4
+
+# （10:30 人工收口：4.5 质量门，脚本任一❌即停，等人工"通过"）
+
+# 11:00  首帧图 + 视频提示词（仅文字，人工执行渲染）  → 素材库
+0 11 * * * /workspace/skills/baigou-video-pipeline/dispatch.sh produce 5,6
+
+# 14:00  多平台文案  → ④多平台适配库
+0 14 * * * /workspace/skills/baigou-video-pipeline/dispatch.sh produce 7
+
+# ---------- 周一 周复盘 ----------
+# 周一 09:00  周度数据复盘  → ⑥复盘数据库
+0 9 * * 1   /workspace/skills/baigou-video-pipeline/dispatch.sh produce 8
+
+# ---------- Track B 测款线（信号驱动，示例每周三跑方向池） ----------
+# 周三 10:00  变量化反共识选题（6~9 方向）  → ②选题库（标记 测试）
+# （之后人工收口：裁决① 从信号池选 2~3 展开）
+0 10 * * 3  /workspace/skills/baigou-video-pipeline/dispatch.sh test 3
+
+# （裁决① 后手动触发：变量矩阵脚本 2~3 变体/选题  → ③；再到裁决② 挑测款包）
+# 0 11 * * 3  /workspace/skills/baigou-video-pipeline/dispatch.sh test 4
+# （测款包小流量投放 3~7 天后：task09_test 回收  → ⑥）

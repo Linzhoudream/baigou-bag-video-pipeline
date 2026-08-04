@@ -1,0 +1,5 @@
+# 运行态与本地敏感
+.state/
+*.log
+.DS_Store
+Thumbs.db
